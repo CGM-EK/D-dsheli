@@ -88,3 +88,22 @@ plot(dfDI2016$pfv, ylim = c(-8,8), type = "l", xaxt = "n", xlab = "year", ylab =
 axis(side = 1, at = seq(1, 66, by = 4), labels = paste("", 0:16))
 
 dfDI2016 <- as.data.frame(dfDI[1:66,])
+
+plot(fitted.lm.test.di, type = "l")
+plot(fitted.lm.test.di, ylim = c(-8,8), type = "l", xaxt = "n", xlab = "year", ylab ="DI's forbrugertillidsindikator")
+axis(side = 1, at = seq(1, 106, by = 4), labels = paste("", 0:26))
+
+predict.DI <- as.data.frame(predict(lm.test.di, fitted.lm.test.di, type = "response", interval = "none"),nrow(103))
+predict?
+
+fitted.lm.test.di <- as.list(fitted.lm.test.di)
+
+predict.DI <- as.data.frame(fitted.lm.test.di,nrow(103),ncol(3), row.names(fitted.values))
+predict.DI <- predict.DI[1:3,103]
+
+ny_obs <- data.frame(x=lm.test.di+1)
+forudsigelse <- predict(lm.test.di, newdata = ny_obs, interval = "none")
+sidste_x <- max(dfDI$pfv)
+ny_obs <- data.frame(x=sidste_x+1)
+
+predict(lm.test.di,dfDI$pfv, newdata = ny_obs, type = "response", interval = "none")
