@@ -7,7 +7,28 @@ kvartalseq1 <- seq(1,304, 3)
 kvartalseq2 <- seq(2,305, 3)
 kvartalseq3 <- seq(3,306, 3)
 
+f.tillid$sammenlagtDI <- c((f.tillid$`Familiens økonomiske situation i dag, sammenlignet med for et år siden`+
+                           f.tillid$`Danmarks økonomiske situation i dag, sammenlignet med for et år siden`+
+                             f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`+
+                             f.tillid$`Anskaffelse af større forbrugsgoder, inden for de næste 12 mdr.`)/4)
+f.tillid$sammenlagtDST <- c((f.tillid$`Familiens økonomiske situation i dag, sammenlignet med for et år siden`+
+                               f.tillid$`Familiens økonomiske  situation om et år, sammenlignet med i dag`+
+                               f.tillid$`Danmarks økonomiske situation i dag, sammenlignet med for et år siden`+
+                               f.tillid$`Danmarks økonomiske situation om et år, sammenlignet med i dag`+
+                               f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`)/5)
+
 #kvartalsekvenser anvendes på forbrugertillidsindikatoren og dens underspørgsmpk og der oprettes vektorer
+
+kvartalerDIft1 <- f.tillid$sammenlagtDI[kvartalseq1]
+kvartalerDIft2 <- f.tillid$sammenlagtDI[kvartalseq2]
+kvartalerDIft3 <- f.tillid$sammenlagtDI[kvartalseq3]
+forbrugertillidDI <- c((kvartalerDIft1+kvartalerDIft2+kvartalerDIft3)/3)
+
+kvartalerDSTft1 <- f.tillid$sammenlagtDST[kvartalseq1]
+kvartalerDSTft2 <- f.tillid$sammenlagtDST[kvartalseq2]
+kvartalerDSTft3 <- f.tillid$sammenlagtDST[kvartalseq3]
+forbrugertillidDST <- c((kvartalerDSTft1+kvartalerDSTft2+kvartalerDSTft3)/3)
+
 kvartalftillid1 <- f.tillid$Forbrugertillidsindikatoren[kvartalseq1]
 kvartalftillid2 <- f.tillid$Forbrugertillidsindikatoren[kvartalseq2]
 kvartalftillid3 <- f.tillid$Forbrugertillidsindikatoren[kvartalseq3]
@@ -66,13 +87,13 @@ dfDST$dk.sit.bag <- dk.sit.bag
 dfDST$dk.sit.frem <- dk.sit.frem
 dfDST$an.str.fbg.fd <- an.str.fbg.fd
 
-lm.test.di <- lm(pfv~fam.sit.ift.bag+dk.sit.bag+an.str.fbg.fd+an.str.fbg.n12, data = dfDI)
+lm.test.di <- lm(dfDI$pfv~forbrugertillidDI)
 summary(lm.test.di)
 fitted.lm.test.di <- lm.test.di$fitted.values
 cor(fitted.lm.test.di,dfDI$pfv)
 
 
-lm.test.dst <- lm(pfv~fam.sit.ift.bag+fam.sit.frem+dk.sit.bag+dk.sit.frem+an.str.fbg.fd, data = dfDST)
+lm.test.dst <- lm(dfDST$pfv~forbrugertillidDST)
 summary(lm.test.dst)
 fitted.lm.test.dst <- lm.test.dst$fitted.values
 cor(fitted.lm.test.dst,dfDI$pfv)
@@ -93,17 +114,20 @@ plot(fitted.lm.test.di, type = "l")
 plot(fitted.lm.test.di, ylim = c(-8,8), type = "l", xaxt = "n", xlab = "year", ylab ="DI's forbrugertillidsindikator")
 axis(side = 1, at = seq(1, 106, by = 4), labels = paste("", 0:26))
 
-predict.DI <- as.data.frame(predict(lm.test.di, fitted.lm.test.di, type = "response", interval = "none"),nrow(103))
-predict?
 
-fitted.lm.test.di <- as.list(fitted.lm.test.di)
+DI3k <- c(forbrugertillid_3_kvartal$`Familiens økonomiske situation i dag, sammenlignet med for et år siden`+
+           forbrugertillid_3_kvartal$`Danmarks økonomiske situation i dag, sammenlignet med for et år siden`+
+           forbrugertillid_3_kvartal$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`+
+           forbrugertillid_3_kvartal$`Anskaffelse af større forbrugsgoder, inden for de næste 12 mdr.`)/4
+DI3ksam <- sum(DI3k)/3
 
-predict.DI <- as.data.frame(fitted.lm.test.di,nrow(103),ncol(3), row.names(fitted.values))
-predict.DI <- predict.DI[1:3,103]
+DST3k <- c(forbrugertillid_3_kvartal$`Familiens økonomiske situation i dag, sammenlignet med for et år siden`+
+                      forbrugertillid_3_kvartal$`Danmarks økonomiske situation i dag, sammenlignet med for et år siden`+
+                      forbrugertillid_3_kvartal$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`+
+                      forbrugertillid_3_kvartal$`Familiens økonomiske  situation om et år, sammenlignet med i dag`+
+                        forbrugertillid_3_kvartal$`Danmarks økonomiske situation om et år, sammenlignet med i dag`)/5
+DST3ksam <- sum(DST3k)/3
 
-ny_obs <- data.frame(x=lm.test.di+1)
-forudsigelse <- predict(lm.test.di, newdata = ny_obs, interval = "none")
-sidste_x <- max(dfDI$pfv)
-ny_obs <- data.frame(x=sidste_x+1)
+DI3kpfv <- 2.09628+0.20139*DI3ksam
 
-predict(lm.test.di,dfDI$pfv, newdata = ny_obs, type = "response", interval = "none")
+DST3ksam <- 1.19684+0.18502*DST3ksam
