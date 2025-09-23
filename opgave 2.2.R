@@ -87,14 +87,21 @@ dfDST$dk.sit.bag <- dk.sit.bag
 dfDST$dk.sit.frem <- dk.sit.frem
 dfDST$an.str.fbg.fd <- an.str.fbg.fd
 
-lm.test.di <- lm(dfDI$pfv~forbrugertillidDI)
-summary(lm.test.di)
+lm.test.dihele <- lm(dfDI$pfv~dfDI$fam.sit.ift.bag+
+                   dfDI$dk.sit.bag+
+                   dfDI$an.str.fbg.fd+
+                   dfDI$an.str.fbg.n12)
+summary(lm.test.dihele)
 fitted.lm.test.di <- lm.test.di$fitted.values
 cor(fitted.lm.test.di,dfDI$pfv)
 
 
-lm.test.dst <- lm(dfDST$pfv~forbrugertillidDST)
-summary(lm.test.dst)
+lm.test.dsthele <- lm(dfDST$pfv~dfDST$fam.sit.ift.bag+
+                    dfDST$fam.sit.frem+
+                    dfDST$dk.sit.bag+
+                    dfDST$dk.sit.frem+
+                    dfDST$an.str.fbg.fd)
+summary(lm.test.dsthele)
 fitted.lm.test.dst <- lm.test.dst$fitted.values
 cor(fitted.lm.test.dst,dfDI$pfv)
 fitted.lm.test.di

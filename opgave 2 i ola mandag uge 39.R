@@ -42,7 +42,7 @@ dfDI$pfv <- P.forbrugvaekst[-1]
 dfDST$pfv <- P.forbrugvaekst[-1]
 
 #lineære modeller for dst og di's forbrugertillidsindikatorer
-lm.test.di <- lm(dfDI$pfv~forbrugertillidDI)
+lm.test.di <- lm(dfDI$pfv~forbrugertillidDI$`c((kvartalerDIft1 + kvartalerDIft2 + kvartalerDIft3)/3)`)
 summary(lm.test.di)
 fitted.lm.test.di <- lm.test.di$fitted.values
 cor(fitted.lm.test.di,dfDI$pfv)
@@ -75,8 +75,40 @@ indikatorplus <- sum(f.tillid$sammenlagtDI)/nrow(f.tillid)
 
 vplus <- c(rep(indikatorplus,102))
 
-forbrugertillidDI$modeltal <- forbrugertillidDI$`c((kvartalerDIft1 + kvartalerDIft2 + kvartalerDIft3)/3)`+(vplus*-1)
+forbrugertillidDI$modeltalDI <- forbrugertillidDI$`c((kvartalerDIft1 + kvartalerDIft2 + kvartalerDIft3)/3)`+(vplus*-1)
 
+indikatorplusDST <- sum(f.tillid$sammenlagtDST)/nrow(f.tillid)
+
+vplusDST <- c(rep(indikatorplusDST,102))
+
+forbrugertillidDI$modeltalDST <- forbrugertillidDST+(vplusDST*-1)
+
+#kvartaler defineres fra 2000 til 2025
+kvartaler <- seq.Date(from = as.Date("2000-01-01"),
+                      to = as.Date("2025-06-30"),
+                      by = "quarter")
+forbrugertillidDI$kvartaler <- kvartaler
+forbrugertillidDI$pfv <- dfDI$pfv
+
+#plot for DI's ftillid og pfv 2000 til 2025 2.k
+ggplot(data = forbrugertillidDI, aes(x=kvartaler))+
+  geom_bar(aes(y=pfv*3.125), fill = "steelblue", stat = "identity")+
+  geom_line(aes(y=modeltalDI), size = 0.7, color = "orange")+
+  geom_line(aes(y=modeltalDST), size = 0.7, color = "brown")+
+  scale_y_continuous(
+    name = "Nettotal Forbrugertillidsindikator",
+    limits = c(-40,30),
+    sec.axis = sec_axis(~./3.125, name ="Realvækst Privatforbrug")
+  )+
+  labs(color = "Linjer", fill = "Søjler") +
+  theme_minimal()+ labs(title = "DI's forbrugertillidsindikator følger i højere grad privatforbruget")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  scale_x_date(name = "Year", breaks = forbrugertillidDI$kvartaler[seq(1, length(forbrugertillidDI$kvartaler), by = 4)],
+               labels = format(forbrugertillidDI$kvartaler[seq(1, length(forbrugertillidDI$kvartaler), by = 4)], "%Y"))+
+  geom_hline(yintercept = 0, linetype = "solid", linewidth = 0.1, color = "black")
+summary(forbrugertillidDI$pfv)
+summary(forbrugertillidDI$modeltalDI)
+summary(forbrugertillidDI$modeltalDST)
 #2016 ftillid DI
 ftillid2016DI <- data.frame(forbrugertillidDI[1:66,1])
 indikatorplus2016 <- sum(ftillid2016DI$forbrugertillidDI.1.66..1.)/nrow(ftillid2016DI)
@@ -85,7 +117,7 @@ ftillid2016DI$modeltal <- (ftillid2016DI$forbrugertillidDI.1.66..1.)+(vplus2016*
 plot(ftillid2016DI$modeltal, ylim = c(-25,25), type = "l", xaxt = "n", xlab = "year", ylab = "DI's forbrugertillidsindikator")
 axis(side = 1, at = seq(1, 66, by = 4), labels = paste("", 0:16))
 names(ftillid2016DI)[1] <- "ftillidindDI"
-?names
+
 #plot for 2016
 ftillid2016DI$pfv <- dfDI2016$pfv
 kvartaler <- seq.Date(from = as.Date("2000-01-01"),
