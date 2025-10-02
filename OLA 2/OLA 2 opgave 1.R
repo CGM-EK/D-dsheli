@@ -56,29 +56,33 @@ mergedbolig2 <- left_join(befolkningsdatacl, combinedby, by = "by")
 mergedbolig <- inner_join(mergedbolig2, boligcl22, by = "mzip")
 
 #vi laver en ny dataframe uden dublikater ud fra boligID
-mergedclean <- mergedbolig %>% distinct(prøve$bolig_id, .keep_all = TRUE)
+mergedclean <- mergedbolig %>% distinct(mergedbolig$bolig_id, .keep_all = TRUE)
 
 #vi undersøger befolkningstalet fra de forskellige byer
 summary(mergedclean$total)
 
 #vi definerer vores breaks og labels til den nye bykategorivariabel
 mybreaks=c(160000,40000,10000, 2500, 1000,0)
-mylabs=c("landsby","lille by", "almindelig by", "større by", "storby")
+mylabs=c("Landsby (<1.000)","Lille by (1.001-2.500)", "Almindelig by (2.501-10.000)", "Større by (10.001-40.000)", "Storby (40.001+)")
 
 #den nye kategorivariabel defineres
-mergedclean$bykat <- cut(mergedclean$total, labels = mylabs, breaks = mybreaks)
+mergedclean$Bykategori <- cut(mergedclean$total, labels = mylabs, breaks = mybreaks)
 
 #vi laver så den endelige dataframe hvor vi har vores by, pris, kvmpris, og bykategori
-boliger1.4 <- mergedclean[,c(5,8,24,26)]
+boliger1.4 <- mergedclean[,c(5,8,24,27)]
 
 #vi laver en ny dataframe der indeholder den gennemsnitlige kvmpris for bykategorien
 combinedkvm <- boliger1.4 %>% 
-  group_by(bykat) %>% 
+  group_by(Bykategori) %>% 
   summarise(kvmpris=mean(kvmpris),.groups = "drop")
 
 #vi ploter den gennemsnitlige kvmpris for bykategorierne
-ggplot(data = combinedkvm, aes(x=bykat, y=kvmpris, fill = bykat, group = bykat))+
-  geom_bar(stat = "identity")
+ggplot(data = combinedkvm, aes(x=Bykategori, y=kvmpris, fill = Bykategori))+
+  geom_bar(stat = "identity")+
+  theme_minimal()+ theme(legend.position = "none") +
+  labs(title = "Kvadratmeterpriser stiger med indbyggertal", caption = "Kilde:https://www.statistikbanken.dk/POSTNR2\nKilde:https://www.boligsiden.dk/")+ 
+                        ylab("Gennemsnitlig kvadratmeterpris i Kr.")+ xlab("Bykategori baseret på indbyggertal")
+  
 
 #############################
 co <- boligcl22 %>% 

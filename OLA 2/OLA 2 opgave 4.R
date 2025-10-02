@@ -12,6 +12,17 @@ f.tillid <- read_excel("R/R projekter/Forbrugertillidsindikator2000_2025 OLA2.xl
 mean(f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`)
 #-10.53072
 
+#vi henter data fra Danmarks statistik
+forbrugerforv <- dst_meta(table = "FORV1", lang = "da")
+
+#vi udvælger variabler vi vil kigge på og opretter et dataset
+forbrugerforv_meta_filters <- list(
+  PNR20 = "*",
+  Tid = "2025"
+)
+befolkningsdata <- dst_get_data(table = "POSTNR2", query = dkbefolk_meta_filters, lang = "da")
+befolkningsdatacl <- befolkningsdata
+
 year <- seq.Date(from = as.Date("2000-01-01"),
                  to = as.Date("2025-06-30"),
                  by = "quarter")
