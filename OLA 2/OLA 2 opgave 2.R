@@ -1,7 +1,9 @@
 #loader pakker til brug i opgaven
+library(danstat)
 library(tidyverse)
 library(ggplot2)
 library(readxl)
+library(dkstat)
 
 #vi henter data fra Danmarks statistik
 forbrugerforv <- dst_meta(table = "FORV1", lang = "da")
@@ -72,7 +74,7 @@ year <- seq.Date(from = as.Date("2000-01-01"),
 f.tillidsammen <- as.data.frame(year)
 
 #Der oprettes en vektor for den årlige kvartalvise realvækst for privatforbruget, som indsættes i dataframes
-P.forbrugvaekst <- c(0, diff(log(p.forbrug$Privatforbrug),lag=4)*100)
+P.forbrugvaekst <- c(0, diff(log(p.forbrug$value),lag=4)*100)
 f.tillidsammen$pfv <- P.forbrugvaekst[-1]
 f.tillidsammen$f.tillidDI <- forbrugertillidDI$`c((kvartalerDIft1 + kvartalerDIft2 + kvartalerDIft3)/3)`
 f.tillidsammen$f.tillidDST <- forbrugertillidDST$`(kvartalerDSTft1 + kvartalerDSTft2 + kvartalerDSTft3)/3`
