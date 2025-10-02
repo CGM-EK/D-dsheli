@@ -36,28 +36,32 @@ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
 
 ########################3
 
-dkbefolkningpost <- dst_meta(table = "FU13", lang = "da")
+forbruglist <- dst_meta(table = "NAHC021", lang = "da")
 
 dkforbrug_meta_filters <- list(
-  KONSUMGRP = c("01 FØDEVARER OG IKKE-ALKOHOLISKE DRIKKEVARER",
-  "02 ALKOHOLISKE DRIKKEVARER, TOBAK OG EUFORISERENDE STOFFER",
-  "03 BEKLÆDNING OG FODTØJ",
-  "04 BOLIG, VAND, ELEKTRICITET, GAS OG ANDET BRÆNDSEL",
-  "05 BOLIG-, HUSHOLDNINGSUDSTYR SAMT HUSHOLDNINGSTJENESTER",
-  "06 SUNDHED",
-  "07 TRANSPORT",
-  "08 INFORMATION OG KOMMUNIKATION",
-  "09 FRITID, SPORT OG KULTUR",
-  "10 UNDERVISNING",
-  "11 RESTAURANTER OG HOTELLER",
-  "12 FORSIKRING OG FINANSIELLE TJENESTEYDELSER",
-  "13 PERSONLIG PLEJE SAMT DIVERSE VARER OG TJENESTER"),
-  HUSSTAND = "Gennemsnitshusstand",
-  PRISENHED = "Faste priser",
-  Tid = "*"
+  FORMAAAL = c("Fødevarer mv.",
+                "Drikkevarer og tobak mv.",
+                "Beklædning og fodtøj",
+                "Boligbenyttelse",
+                "Elektricitet, fjernvarme og andet brændsel",
+                "Boligudstyr, husholdningstjenester mv.",
+                "Medicin, lægeudgifter o.l.",
+                "Køb af køretøjer",
+                "Drift af køretøjer og transporttjenester",
+                "Information og kommunikation",
+                "Fritid, sport og kultur",
+                "Undervisning",
+                "Restauranter og hoteller",
+                "Forsikring og finansielle tjenester",
+                "Andre varer og tjenester"),
+  PRISENHED = "2020-priser, kædede værdier",
+  TID = "*"
 )
-befolkningsdata <- dst_get_data(table = "FU13", query = dkforbrug_meta_filters, lang = "da")
+
+forbrugsdata <- dst_get_data(table = "NAHC021", query = dkforbrug_meta_filters, lang = "da")
 befolkningsdatacl <- befolkningsdata
+
+forbrugsdata1 <- forbrugsdata %>% filter(TID >="2000-01-01")
 
 ggplot(data = befolkningsdata, aes(x=TID, y=value, group = KONSUMGRP, color = KONSUMGRP))+
   geom_line()
@@ -72,3 +76,118 @@ forbrugsgoder_2020_2025 <- forbrugsgoder_2020_2025 %>%
                 ~ .x / first(.x) * 100,
                 .names = "{.col}_idx"))          
 
+
+#setup til lineære regressioner
+lmyear <- seq.Date(from = as.Date("2000-01-01"),
+                 to = as.Date("2024-10-01"),
+                 by = "year")
+
+lmtestdf <- as.data.frame(lmyear)
+
+names(lmtestdf)[names(lmtestdf) == "lmyear"] <- "year"
+
+forbrugertilliddilm <- as.data.frame(f.tillidsammen$year[1:100])
+forbrugertilliddilm$f.tillidDI <- f.tillidsammen$f.tillidDI[1:100]
+forbrugertilliddilm$f.tillidDST <- f.tillidsammen$f.tillidDST[1:100]
+
+#kvartalersekvenser opsættes
+kvartalseq1lm<- seq(1,97, 4)
+kvartalseq2lm <- seq(2,98, 4)
+kvartalseq3lm <- seq(3,99, 4)
+kvartalseq4lm <- seq(4,100,4)
+#kvartalsekvenser anvendes på forbrugertillidsindikatorerne og der oprettes dataframes
+kvartalerlm1DI <- forbrugertilliddilm$f.tillidDI[kvartalseq1lm]
+kvartalerlm2DI <- forbrugertilliddilm$f.tillidDI[kvartalseq2lm]
+kvartalerlm3DI <- forbrugertilliddilm$f.tillidDI[kvartalseq3lm]
+kvartalerlm4DI <- forbrugertilliddilm$f.tillidDI[kvartalseq4lm]
+lmtestdf$DIft <- c((kvartalerlm1DI+kvartalerlm2DI+kvartalerlm3DI+kvartalerlm4DI)/4)
+
+kvartalerlm1DST <- forbrugertilliddilm$f.tillidDST[kvartalseq1lm]
+kvartalerlm2DST <- forbrugertilliddilm$f.tillidDST[kvartalseq2lm]
+kvartalerlm3DST <- forbrugertilliddilm$f.tillidDST[kvartalseq3lm]
+kvartalerlm4DST <- forbrugertilliddilm$f.tillidDST[kvartalseq4lm]
+lmtestdf$DSTft <- c((kvartalerlm1DST+kvartalerlm2DST+kvartalerlm3DST+kvartalerlm4DST)/4)
+
+pivottabel <- pivot_wider(
+  data = forbrugsdata1,
+  names_from = FORMAAAL,
+  values_from = value
+)
+names(pivottabel)[names(pivottabel) == "TID"] <- "year"
+lmtestdfjoined <- left_join(lmtestdf, pivottabel, "year")
+
+#lineære regressioner
+lm.test.kat1DI <- lm(lmtestdfjoined$`CPA Fødevarer mv.`~lmtestdfjoined$DIft)
+summary(lm.test.kat1DI)
+lm.test.kat1DST <- lm(lmtestdfjoined$`CPA Fødevarer mv.`~lmtestdfjoined$DSTft)
+summary(lm.test.kat1DST)
+
+lm.test.kat2DI <- lm(lmtestdfjoined$`CPB Drikkevarer og tobak mv.`~lmtestdfjoined$DIft)
+summary(lm.test.kat2DI)
+lm.test.kat2DST <- lm(lmtestdfjoined$`CPB Drikkevarer og tobak mv.`~lmtestdfjoined$DSTft)
+summary(lm.test.kat2DST)
+
+lm.test.kat3DI <- lm(lmtestdfjoined$`CPC Beklædning og fodtøj`~lmtestdfjoined$DIft)
+summary(lm.test.kat3DI)
+lm.test.kat3DST <- lm(lmtestdfjoined$`CPC Beklædning og fodtøj`~lmtestdfjoined$DSTft)
+summary(lm.test.kat3DST)
+
+lm.test.kat4DI <- lm(lmtestdfjoined$`CPD Boligbenyttelse`~lmtestdfjoined$DIft)
+summary(lm.test.kat4DI)
+lm.test.kat4DST <- lm(lmtestdfjoined$`CPD Boligbenyttelse`~lmtestdfjoined$DSTft)
+summary(lm.test.kat4DST)
+
+lm.test.kat5DI <- lm(lmtestdfjoined$`CPE Elektricitet, fjernvarme og andet brændsel`~lmtestdfjoined$DIft)
+summary(lm.test.kat5DI)
+lm.test.kat5DST <- lm(lmtestdfjoined$`CPE Elektricitet, fjernvarme og andet brændsel`~lmtestdfjoined$DSTft)
+summary(lm.test.kat5DST)
+
+lm.test.kat6DI <- lm(lmtestdfjoined$`CPF Boligudstyr, husholdningstjenester mv.`~lmtestdfjoined$DIft)
+summary(lm.test.kat6DI)
+lm.test.kat6DST <- lm(lmtestdfjoined$`CPF Boligudstyr, husholdningstjenester mv.`~lmtestdfjoined$DSTft)
+summary(lm.test.kat6DST)
+
+lm.test.kat7DI <- lm(lmtestdfjoined$`CPG Medicin, lægeudgifter o.l.`~lmtestdfjoined$DIft)
+summary(lm.test.kat7DI)
+lm.test.kat7DST <- lm(lmtestdfjoined$`CPG Medicin, lægeudgifter o.l.`~lmtestdfjoined$DSTft)
+summary(lm.test.kat7DST)
+
+lm.test.kat8DI <- lm(lmtestdfjoined$`CPH Køb af køretøjer`~lmtestdfjoined$DIft)
+summary(lm.test.kat8DI)
+lm.test.kat8DST <- lm(lmtestdfjoined$`CPH Køb af køretøjer`~lmtestdfjoined$DSTft)
+summary(lm.test.kat8DST)
+
+lm.test.kat9DI <- lm(lmtestdfjoined$`CPI Drift af køretøjer og transporttjenester`~lmtestdfjoined$DIft)
+summary(lm.test.kat9DI)
+lm.test.kat9DST <- lm(lmtestdfjoined$`CPI Drift af køretøjer og transporttjenester`~lmtestdfjoined$DSTft)
+summary(lm.test.kat9DST)
+
+lm.test.kat10DI <- lm(lmtestdfjoined$`CPJ Information og kommunikation`~lmtestdfjoined$DIft)
+summary(lm.test.kat10DI)
+lm.test.kat10DST <- lm(lmtestdfjoined$`CPJ Information og kommunikation`~lmtestdfjoined$DSTft)
+summary(lm.test.kat10DST)
+
+lm.test.kat11DI <- lm(lmtestdfjoined$`CPK Fritid, sport og kultur`~lmtestdfjoined$DIft)
+summary(lm.test.kat11DI)
+lm.test.kat11DST <- lm(lmtestdfjoined$`CPK Fritid, sport og kultur`~lmtestdfjoined$DSTft)
+summary(lm.test.kat11DST)
+
+lm.test.kat12DI <- lm(lmtestdfjoined$`CPL Undervisning`~lmtestdfjoined$DIft)
+summary(lm.test.kat12DI)
+lm.test.kat12DST <- lm(lmtestdfjoined$`CPL Undervisning`~lmtestdfjoined$DSTft)
+summary(lm.test.kat12DST)
+
+lm.test.kat13DI <- lm(lmtestdfjoined$`CPM Restauranter og hoteller`~lmtestdfjoined$DIft)
+summary(lm.test.kat13DI)
+lm.test.kat13DST <- lm(lmtestdfjoined$`CPM Restauranter og hoteller`~lmtestdfjoined$DSTft)
+summary(lm.test.kat13DST)
+
+lm.test.kat14DI <- lm(lmtestdfjoined$`CPN Forsikring og finansielle tjenester`~lmtestdfjoined$DIft)
+summary(lm.test.kat14DI)
+lm.test.kat14DST <- lm(lmtestdfjoined$`CPN Forsikring og finansielle tjenester`~lmtestdfjoined$DSTft)
+summary(lm.test.kat14DST)
+
+lm.test.kat15DI <- lm(lmtestdfjoined$`CPO Andre varer og tjenester`~lmtestdfjoined$DIft)
+summary(lm.test.kat15DI)
+lm.test.kat15DST <- lm(lmtestdfjoined$`CPO Andre varer og tjenester`~lmtestdfjoined$DSTft)
+summary(lm.test.kat15DST)

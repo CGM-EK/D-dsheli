@@ -89,8 +89,8 @@ f.tillidsammen$modeltalDST <- f.tillidsammen$f.tillidDST+(vplusDST*-1)
 #plot for DI's ftillid og pfv 2000 til 2025 2.k
 ggplot(data = f.tillidsammen, aes(x=year))+
   geom_bar(aes(y=pfv*3.125), fill = "steelblue", stat = "identity")+
-  geom_line(aes(y=modeltalDI), size = 0.7, color = "orange")+
-  geom_line(aes(y=modeltalDST), size = 0.7, color = "brown")+
+  geom_line(aes(y=modeltalDI), size = 1.2, color = "orange")+
+  geom_line(aes(y=modeltalDST), size = 1.2, color = "brown")+
   scale_y_continuous(
     name = "Nettotal Forbrugertillidsindikator",
     limits = c(-40,30),
@@ -100,7 +100,7 @@ ggplot(data = f.tillidsammen, aes(x=year))+
   theme_minimal()+ labs(title = "DI's forbrugertillidsindikator følger i højere grad privatforbruget")+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   scale_x_date(name = "Year", breaks = f.tillidsammen$year[seq(1, length(f.tillidsammen$year), by = 4)],
-               labels = format(f.tillidsammen$year[seq(1, length(f.tillidsammen$year), by = 4)], "%Y"))+
+               labels =format(f.tillidsammen$year[seq(1, length(f.tillidsammen$year), by = 4)], "%Y"))+
   geom_hline(yintercept = 0, linetype = "solid", linewidth = 0.1, color = "black")
 
 #2016 ftillid DI for at kontrollere at det stemmer overens med DI's graf
@@ -137,3 +137,18 @@ DST3ksam <- sum(DST3k)/3
 DI3kpfv <- 2.09628+0.20139*DI3ksam
 
 DST3ksam <- 1.19684+0.18502*DST3ksam
+
+################
+#plot for privatforbruget alene
+pfvplotdf <- f.tillidsammen[73:102,]
+
+ggplot(data = pfvplotdf, aes(x=year))+
+  geom_bar(aes(y=pfv), fill = "steelblue", stat = "identity")+
+  geom_line(aes(y=p.forbrug/p.forbrug[1]*100-100), size = 1.2)+
+  theme_minimal()+ labs(title = "Privatforbruget har haft fremgang de seneste kvartaler")+
+  theme(axis.text.x = element_text(size = 15,angle = 90, vjust = 0.5, hjust = 1))+
+  scale_x_date(name = "Årstal", breaks = f.tillidsammen$year[seq(1, length(f.tillidsammen$year), by = 4)],
+               labels = format(f.tillidsammen$year[seq(1, length(f.tillidsammen$year), by = 4)], "%Y"))+
+  scale_y_continuous(name = "Årlige kvartalvise realvækst",limits = c(-10,12), breaks = seq(from = -10, to = 10, by = 2),
+                     sec.axis = sec_axis(~(.+100)/100*pfvplotdf$p.forbrug[1], name ="Privatforbruget i hele milliader kr."))+
+  geom_hline(yintercept = 0, linetype = "solid", linewidth = 0.1, color = "black")
