@@ -3,7 +3,7 @@ library(danstat)
 library(dkstat)
 library(mapDK)
 library(tidyverse)
-
+#testtest
 #vi henter data fra Danmarks statistik
 dkbefolkningpost <- dst_meta(table = "POSTNR2", lang = "da")
 
@@ -91,3 +91,4 @@ co <- boligcl22 %>%
 
 ggplot(data = boligcl22, aes(x=type, y=kvmpris), color = type, group = type)+
   geom_bar(stat="identity")
+
