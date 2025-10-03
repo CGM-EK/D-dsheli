@@ -7,21 +7,27 @@ library(tidyverse)
 #loader data for forbrugertillid og privatforbrug til brug i opgaven
 f.tillid <- read_excel("R/R projekter/Forbrugertillidsindikator2000_2025 OLA2.xlsx", 
                        sheet = "Ark1")
-
-#laver et gennemsnit på vektoren
-mean(f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`)
-#-10.53072
-
 #vi henter data fra Danmarks statistik
 forbrugerforv <- dst_meta(table = "FORV1", lang = "da")
 
 #vi udvælger variabler vi vil kigge på og opretter et dataset
 forbrugerforv_meta_filters <- list(
-  PNR20 = "*",
-  Tid = "2025"
+  INDIKATOR = "*",
+  Tid = "*"
 )
-befolkningsdata <- dst_get_data(table = "POSTNR2", query = dkbefolk_meta_filters, lang = "da")
-befolkningsdatacl <- befolkningsdata
+f.tillid1 <- dst_get_data(table = "FORV1", query = forbrugerforv_meta_filters, lang = "da")
+f.tillid1 <- f.tillid1 %>% filter(TID >="2000-01-01")
+
+f.tillid <- pivot_wider(
+  data = f.tillid1,
+  names_from = INDIKATOR,
+  values_from = value)
+
+#laver et gennemsnit på vektoren
+mean(f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`)
+#-10.53072
+
+
 
 year <- seq.Date(from = as.Date("2000-01-01"),
                  to = as.Date("2025-06-30"),
@@ -34,17 +40,26 @@ kvartalseq2 <- seq(2,305, 3)
 kvartalseq3 <- seq(3,306, 3)
 
 #kvartalsekvenser anvendes på forbrugertillidsindikatorerne og der oprettes dataframes
-kvartalerplot1 <- f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[kvartalseq1]
-kvartalerplot2 <- f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[kvartalseq2]
-kvartalerplot3 <- f.tillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[kvartalseq3]
+kvartalerplot1 <- f.tillid$`F9 Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[kvartalseq1]
+kvartalerplot2 <- f.tillid$`F9 Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[kvartalseq2]
+kvartalerplot3 <- f.tillid$`F9 Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[kvartalseq3]
 plotdata$ansk <- c((kvartalerplot1+kvartalerplot2+kvartalerplot3)/3)
 
-ggplot(data = plotdata, aes(x=year, y = ansk))+
-  geom_line()+
+ggplot(data = plotdata, aes(x=year, y = ansk, color = "Anskaffelse af større forbrugsgoder"))+
+  geom_line(size = 1.5)+
+  geom_point(size = 2)+
 theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   scale_x_date(name = "Year", breaks = plotdata$year[seq(1, length(plotdata$year), by = 4)],
-               labels = format(plotdata$year[seq(1, length(plotdata$year), by = 4)], "%Y"))
-
+               labels = format(plotdata$year[seq(1, length(plotdata$year), by = 4)], "%Y"))+
+  theme_minimal()+
+  scale_y_continuous(name = "Anskaffelse af større forbrugsgoder",
+                     limits = c(-50,5))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "bottom")+
+  scale_color_manual(
+    name = "",  # Overskrift for linjerne
+    values = c("Anskaffelse af større forbrugsgoder" = "orange"))+
+  labs(title = "Forbrugerne svarer generelt negativt omkring anskaffelse af større forbrugsgoder", caption = "Kilde:https://www.statistikbanken.dk/FORV1")
+gnsansk <- mean(plotdata$ansk)
 ########################3
 
 forbruglist <- dst_meta(table = "NAHC021", lang = "da")
@@ -70,12 +85,49 @@ dkforbrug_meta_filters <- list(
 )
 
 forbrugsdata <- dst_get_data(table = "NAHC021", query = dkforbrug_meta_filters, lang = "da")
-befolkningsdatacl <- befolkningsdata
 
 forbrugsdata1 <- forbrugsdata %>% filter(TID >="2000-01-01")
 
-ggplot(data = befolkningsdata, aes(x=TID, y=value, group = KONSUMGRP, color = KONSUMGRP))+
+#laver en ny vektor med tallene i tusinder
+forbrugsdata1$modeltal <- forbrugsdata1$value/1000
+
+#filtre til opdeling i forbrugsgrupper
+
+madogforbrug <- forbrugsdata1 %>% filter(FORMAAAL == "CPA Fødevarer mv."|
+                                           FORMAAAL == "CPB Drikkevarer og tobak mv."|
+                                           FORMAAAL == "CPM Restauranter og hoteller")
+
+boligoghusholdning <- forbrugsdata1 %>% filter(FORMAAAL == "CPD Boligbenyttelse"|
+                                           FORMAAAL == "CPE Elektricitet, fjernvarme og andet brændsel"|
+                                           FORMAAAL == "CPF Boligudstyr, husholdningstjenester mv.")
+
+sundhedogpersonligomsorg <- forbrugsdata1 %>% filter(FORMAAAL == "CPG Medicin, lægeudgifter o.l.")
+
+transport <- forbrugsdata1 %>% filter(FORMAAAL == "CPH Køb af køretøjer"|
+                                                 FORMAAAL == "CPI Drift af køretøjer og transporttjenester")
+
+fritiduddannelseogøk<- forbrugsdata1 %>% filter(FORMAAAL == "CPK Fritid, sport og kultur"|
+                                                  FORMAAAL == "CPL Undervisning"|
+                                                  FORMAAAL == "CPN forsikring og finansielle tjenester"|
+                                                  FORMAAAL == "CPJ Information og kommunikation")
+
+
+ggplot(data = madogforbrug, aes(x=TID, y=modeltal, group = FORMAAAL, color = FORMAAAL))+
   geom_line()
+
+ggplot(data = forbrugsdata2, aes(x=TID, y=modeltal, group = FORMAAAL, color = FORMAAAL))+
+  geom_line()
+
+dfopg33 <- forbrugsdata1[c(1,3,4)]
+
+dfopg333 <- dfopg33 %>% filter(TID == "2000-01-01"|TID =="2024-01-01")
+
+dfopg3333 <- dfopg333 %>% 
+  group_by(FORMAAAL) %>% 
+  summarise(value=diff(value),.groups = "drop")
+dfopg3333$pctforskel <- dfopg333 %>% 
+  group_by(FORMAAAL) %>% 
+  summarise(value=diff(value),.groups = "drop")
 
 #vi laver plottet igen men med indekstal for at gøre udviklingen visuelt sammenlignelig
 forbrugsgoder_2020_2025 <- read_excel("R/forbrugsgoder 2020-2025.xlsx", 
@@ -85,7 +137,8 @@ dfindeks <- forbrugsgoder_2020_2025 %>% mutate(indeks = row_number())
 forbrugsgoder_2020_2025 <- forbrugsgoder_2020_2025 %>%
   mutate(across(where(is.numeric),
                 ~ .x / first(.x) * 100,
-                .names = "{.col}_idx"))          
+                .names = "{.col}_idx"))   
+
 
 
 #setup til lineære regressioner
@@ -125,6 +178,7 @@ pivottabel <- pivot_wider(
   values_from = value
 )
 names(pivottabel)[names(pivottabel) == "TID"] <- "year"
+names(lmtestdf)[names(lmtestdf) == "lmyear"] <- "year"
 lmtestdfjoined <- left_join(lmtestdf, pivottabel, "year")
 
 #lineære regressioner
@@ -202,3 +256,4 @@ lm.test.kat15DI <- lm(lmtestdfjoined$`CPO Andre varer og tjenester`~lmtestdfjoin
 summary(lm.test.kat15DI)
 lm.test.kat15DST <- lm(lmtestdfjoined$`CPO Andre varer og tjenester`~lmtestdfjoined$DSTft)
 summary(lm.test.kat15DST)
+
