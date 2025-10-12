@@ -73,7 +73,7 @@ for(i in 1:length(forbrugertillid)-1) {
   
   temp <- combn(
     x = as.numeric(forbrugertillid[i, ]),
-    m = j,
+    m = 1,
     simplify = TRUE
   )
   
@@ -91,7 +91,9 @@ cordf <- lapply(Comblist1, function(vars) {
   cor(combo_mean, f.tillidsammen$pfv)
 })
 
+
 ### Pivot_Longer på CORDF ### Outputter en data frame med COR + rækkenummer combinationsnr.
+#----
 cordf1 <- as.data.frame(cordf) 
 cor_lang1 <- cordf1 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
 cor_lang1 = cor_lang1[-1]
@@ -135,26 +137,27 @@ cor_lang10 = cor_lang10[-1]
 cordf11 <- as.data.frame(cordf11)
 cor_lang11 <- cordf11 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
 cor_lang11 = cor_lang11[-1]
+#----
 
 ### Kontrol af Cor i listen ### BRUGES IKKE
 førsteplads <- (forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
-                        forbrugertillid$F4.Danmarks.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
-                        forbrugertillid$F7.Priser.om.et.år..sammenlignet.med.i.dag+
-                        forbrugertillid$F9.Anskaffelse.af.større.forbrugsgoder..fordelagtigt.for.øjeblikket+
-                        forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
-                        forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder+
-                        forbrugertillid$F13.Familiens.økonomiske.situation.lige.nu..kan.spare.penge.slår.til..bruger.mere.end.man.tjener)/7
+                  forbrugertillid$F4.Danmarks.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
+                  forbrugertillid$F7.Priser.om.et.år..sammenlignet.med.i.dag+
+                  forbrugertillid$F9.Anskaffelse.af.større.forbrugsgoder..fordelagtigt.for.øjeblikket+
+                  forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
+                  forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder+
+                  forbrugertillid$F13.Familiens.økonomiske.situation.lige.nu..kan.spare.penge.slår.til..bruger.mere.end.man.tjener)/7
 
 ### LM TEST for top 5 Korrelationer ###
 lmtest1 <- lm(f.tillidsammen$pfv ~ førsteplads)
 summary(lmtest1)
 
 andenplads <- (forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
-                  forbrugertillid$F4.Danmarks.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
-                  forbrugertillid$F7.Priser.om.et.år..sammenlignet.med.i.dag+
-                  forbrugertillid$F9.Anskaffelse.af.større.forbrugsgoder..fordelagtigt.for.øjeblikket+
-                  forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
-                  forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder)/6
+                 forbrugertillid$F4.Danmarks.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
+                 forbrugertillid$F7.Priser.om.et.år..sammenlignet.med.i.dag+
+                 forbrugertillid$F9.Anskaffelse.af.større.forbrugsgoder..fordelagtigt.for.øjeblikket+
+                 forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
+                 forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder)/6
 
 
 lmtest2 <- lm(f.tillidsammen$pfv ~ andenplads)
@@ -172,11 +175,11 @@ lmtest3 <- lm(f.tillidsammen$pfv ~ tredjeplads)
 summary(lmtest3)
 
 fjerdeplads <- (forbrugertillid$F4.Danmarks.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
-                 forbrugertillid$F7.Priser.om.et.år..sammenlignet.med.i.dag+
-                 forbrugertillid$F9.Anskaffelse.af.større.forbrugsgoder..fordelagtigt.for.øjeblikket+
-                 forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
-                 forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder+
-                 forbrugertillid$F13.Familiens.økonomiske.situation.lige.nu..kan.spare.penge.slår.til..bruger.mere.end.man.tjener)/6
+                  forbrugertillid$F7.Priser.om.et.år..sammenlignet.med.i.dag+
+                  forbrugertillid$F9.Anskaffelse.af.større.forbrugsgoder..fordelagtigt.for.øjeblikket+
+                  forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
+                  forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder+
+                  forbrugertillid$F13.Familiens.økonomiske.situation.lige.nu..kan.spare.penge.slår.til..bruger.mere.end.man.tjener)/6
 
 lmtest4 <- lm(f.tillidsammen$pfv ~ fjerdeplads)
 summary(lmtest4)
@@ -190,3 +193,4 @@ femteplads <- (forbrugertillid$F3.Familiens.økonomiske..situation.om.et.år..sa
 
 lmtest5 <- lm(f.tillidsammen$pfv ~ femteplads)
 summary(lmtest5)
+

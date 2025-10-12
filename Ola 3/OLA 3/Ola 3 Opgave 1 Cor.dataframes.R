@@ -109,3 +109,4 @@ cordftest <- lapply(Comblist1, function(vars) {
   combo_mean <- rowMeans(forbrugertillid[, vars, drop = FALSE])
   cor.test(combo_mean, f.tillidsammen$pfv)
 })
+
