@@ -37,10 +37,6 @@ f.tillid <- pivot_wider(
   names_from = INDIKATOR,
   values_from = value)
 
-#Der oprettes en vektor for den årlige kvartalvise realvækst for privatforbruget, som indsættes i dataframes
-P.forbrugvaekst <- c(0, diff(log(p.forbrug$value),lag=4)*100)
-f.tillidsammen$pfv <- P.forbrugvaekst[-1]
-
 #kvartalersekvenser opsættes
 kvartalseq1 <- seq(1,304, 3)
 kvartalseq2 <- seq(2,305, 3)
@@ -58,11 +54,16 @@ year <- seq.Date(from = as.Date("2000-01-01"),
                  by = "quarter")
 f.tillidsammen <- as.data.frame(year)
 
-###TESTER###
+#Der oprettes en vektor for den årlige kvartalvise realvækst for privatforbruget, som indsættes i dataframes
+P.forbrugvaekst <- c(0, diff(log(p.forbrug$value),lag=4)*100)
+f.tillidsammen$pfv <- P.forbrugvaekst[-1]
+
+#### TESTER ####
 comb5 <- combn(x = forbrugertillid[1,1:ncol(forbrugertillid)],m=1,FUN = NULL, simplify=F)
 comb7 <- combn(x = forbrugertillid[1,1:ncol(forbrugertillid)],m=2,FUN = NULL, simplify=F)
 comb9 <- combn(x = forbrugertillid[1:nrow(forbrugertillid),1:ncol(forbrugertillid)],m=1,FUN = NULL, simplify=F)
 comb10 <- combn(x = forbrugertillid[1:nrow(forbrugertillid),1:ncol(forbrugertillid)],m=2,FUN = NULL, simplify=F)
+#### TESTER ####
 
 #Looper
 
@@ -81,19 +82,21 @@ for(i in 1:length(forbrugertillid)-1) {
   Comblist[i]=list(df2)
 }
 
-cordf <- lapply(forbrugertillid, function(x) cor.test(x, f.tillidsammen$pfv))
-
-cols <- colnames(forbrugertillid)
-Comblist1 <- combn(cols, 2, simplify = FALSE)  # pairs, change 2→i if needed
-
-cordf <- lapply(Comblist1, function(vars) {
-  combo_mean <- rowMeans(forbrugertillid[, vars, drop = FALSE])
-  cor(combo_mean, f.tillidsammen$pfv)
-})
-
-
 ### Pivot_Longer på CORDF ### Outputter en data frame med COR + rækkenummer combinationsnr.
-#----
+#### cordataframes ####
+
+### Nyt loop ###
+for (i in 2:11) {
+  df_name <- get(paste0("cordf", i))
+  
+  cor_lang <- as.data.frame(df_name[-1]) %>% 
+    pivot_longer(cols = everything(),names_to = "Corr", values_to = "Values")
+  cor_lang = cor_lang[-1]
+  
+  assign(paste0("cor_lang", i), cor_lang)
+}
+
+########################
 cordf1 <- as.data.frame(cordf) 
 cor_lang1 <- cordf1 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
 cor_lang1 = cor_lang1[-1]
@@ -137,7 +140,7 @@ cor_lang10 = cor_lang10[-1]
 cordf11 <- as.data.frame(cordf11)
 cor_lang11 <- cordf11 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
 cor_lang11 = cor_lang11[-1]
-#----
+#### cordataframes ####
 
 ### Kontrol af Cor i listen ### BRUGES IKKE
 førsteplads <- (forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
@@ -148,7 +151,7 @@ førsteplads <- (forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..samme
                   forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder+
                   forbrugertillid$F13.Familiens.økonomiske.situation.lige.nu..kan.spare.penge.slår.til..bruger.mere.end.man.tjener)/7
 
-### LM TEST for top 5 Korrelationer ###
+#### LM TEST for top 5 Korrelationer ####
 lmtest1 <- lm(f.tillidsammen$pfv ~ førsteplads)
 summary(lmtest1)
 
@@ -194,3 +197,4 @@ femteplads <- (forbrugertillid$F3.Familiens.økonomiske..situation.om.et.år..sa
 lmtest5 <- lm(f.tillidsammen$pfv ~ femteplads)
 summary(lmtest5)
 
+#### LM TEST for top 5 Korrelationer ####
