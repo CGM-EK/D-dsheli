@@ -71,76 +71,16 @@ Comblist=list()
 for(i in 1:length(forbrugertillid)-1) {
   #lav en kombination af i holdstørrelse
   df2=combn(forbrugertillid,i,simplify = F)
-  
+
   temp <- combn(
     x = as.numeric(forbrugertillid[i, ]),
     m = 1,
     simplify = TRUE
   )
-  
+
   # put ind i listen
   Comblist[i]=list(df2)
 }
-
-### Pivot_Longer på CORDF ### Outputter en data frame med COR + rækkenummer combinationsnr.
-#### cordataframes ####
-
-### Nyt loop ###
-for (i in 2:11) {
-  df_name <- get(paste0("cordf", i))
-  
-  cor_lang <- as.data.frame(df_name[-1]) %>% 
-    pivot_longer(cols = everything(),names_to = "Corr", values_to = "Values")
-  cor_lang = cor_lang[-1]
-  
-  assign(paste0("cor_lang", i), cor_lang)
-}
-
-########################
-cordf1 <- as.data.frame(cordf) 
-cor_lang1 <- cordf1 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang1 = cor_lang1[-1]
-
-cordf2 <- as.data.frame(cordf2) 
-cor_lang2 <- cordf2 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang2 = cor_lang2[-1]
-
-cordf3 <- as.data.frame(cordf3) 
-cor_lang3 <- cordf3 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang3 = cor_lang3[-1]
-
-cordf4 <- as.data.frame(cordf4)
-cor_lang4 <- cordf4 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang4 = cor_lang4[-1]
-
-cordf5 <- as.data.frame(cordf5)
-cor_lang5 <- cordf5 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang5 = cor_lang5[-1]
-
-cordf6 <- as.data.frame(cordf6)
-cor_lang6 <- cordf6 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang6 = cor_lang6[-1]
-
-cordf7 <- as.data.frame(cordf7)
-cor_lang7 <- cordf7 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang7 = cor_lang7[-1]
-
-cordf8 <- as.data.frame(cordf8)
-cor_lang8 <- cordf8 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang8 = cor_lang8[-1]
-
-cordf9 <- as.data.frame(cordf9)
-cor_lang9 <- cordf9 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang9 = cor_lang9[-1]
-
-cordf10 <- as.data.frame(cordf10)
-cor_lang10 <- cordf10 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang10 = cor_lang10[-1]
-
-cordf11 <- as.data.frame(cordf11)
-cor_lang11 <- cordf11 %>% pivot_longer(cols = everything(),names_to = "corr", values_to = "Values")
-cor_lang11 = cor_lang11[-1]
-#### cordataframes ####
 
 ### Kontrol af Cor i listen ### BRUGES IKKE
 førsteplads <- (forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
@@ -198,3 +138,28 @@ lmtest5 <- lm(f.tillidsammen$pfv ~ femteplads)
 summary(lmtest5)
 
 #### LM TEST for top 5 Korrelationer ####
+
+#### PCR.fit ####
+install.packages("pls")
+library(pls)
+
+pcr.fit <- pcr(f.tillidsammen$pfv ~ forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
+                 forbrugertillid$F3.Familiens.økonomiske..situation.om.et.år..sammenlignet.med.i.dag+
+                 forbrugertillid$F4.Danmarks.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
+                 forbrugertillid$F5.Danmarks.økonomiske.situation.om.et.år..sammenlignet.med.i.dag+
+                 forbrugertillid$F6.Priser.i.dag..sammenlignet.med.for.et.år.siden+
+                 forbrugertillid$F7.Priser.om.et.år..sammenlignet.med.i.dag+
+                 forbrugertillid$F8.Arbejdsløsheden.om.et.år..sammenlignet.med.i.dag+
+                 forbrugertillid$F9.Anskaffelse.af.større.forbrugsgoder..fordelagtigt.for.øjeblikket+
+                 forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
+                 forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder+
+                 forbrugertillid$F13.Familiens.økonomiske.situation.lige.nu..kan.spare.penge.slår.til..bruger.mere.end.man.tjener,
+                 validation = "CV", scale = T)
+summary(pcr.fit)
+
+loadings.pcr.fit <- pcr.fit$loadings
+
+validationplot(pcr.fit, val.type = "MSEP")
+
+w.indicators1 <- loadings.pcr.fit[1:11, 2]^2
+sum(w.indicators1)
