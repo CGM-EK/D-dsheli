@@ -1,3 +1,6 @@
+library(pls)
+
+
 #loader pakker til brug i opgaven
 library(tidyverse)
 library(ggplot2)
@@ -36,6 +39,9 @@ f.tillid <- pivot_wider(
   data = f.tillid1,
   names_from = INDIKATOR,
   values_from = value)
+##########Sætter kolonne 8,9,10 og 12 i negativ####
+f.tillid[,c(8,9,10,12)] <- f.tillid[,c(8,9,10,12)]*-1
+#########################
 
 #kvartalersekvenser opsættes
 kvartalseq1 <- seq(1,304, 3)
@@ -66,21 +72,24 @@ comb10 <- combn(x = forbrugertillid[1:nrow(forbrugertillid),1:ncol(forbrugertill
 #### TESTER ####
 
 #Looper
+#Er work in progress 23/10, da loopet skal opdateres####
 
 Comblist=list()
 for(i in 1:length(forbrugertillid)-1) {
   #lav en kombination af i holdstørrelse
   df2=combn(forbrugertillid,i,simplify = F)
-
+  
   temp <- combn(
     x = as.numeric(forbrugertillid[i, ]),
     m = 1,
     simplify = TRUE
   )
-
-  # put ind i listen
-  Comblist[i]=list(df2)
+  means <- lapply(df2, function(idx) {
+    colMeans(forbrugertillid[idx, , drop = FALSE])
+  })
 }
+
+####################
 
 ### Kontrol af Cor i listen ### BRUGES IKKE
 førsteplads <- (forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
@@ -154,7 +163,7 @@ pcr.fit <- pcr(f.tillidsammen$pfv ~ forbrugertillid$F2.Familiens.økonomiske.sit
                  forbrugertillid$F10.Anskaffelse.af.større.forbrugsgoder..inden.for.de.næste.12.mdr.+
                  forbrugertillid$F12.Regner.med.at.kunne.spare.op.i.de.kommende.12.måneder+
                  forbrugertillid$F13.Familiens.økonomiske.situation.lige.nu..kan.spare.penge.slår.til..bruger.mere.end.man.tjener,
-                 validation = "CV", scale = T)
+               validation = "CV", scale = T)
 summary(pcr.fit)
 
 loadings.pcr.fit <- pcr.fit$loadings
