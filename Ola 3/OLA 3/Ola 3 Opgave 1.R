@@ -1,11 +1,8 @@
-library(pls)
-
-
 #loader pakker til brug i opgaven
 library(tidyverse)
 library(ggplot2)
 library(dkstat)
-
+library(pls)
 #vi henter data fra Danmarks statistik
 forbrugerforv <- dst_meta(table = "FORV1", lang = "da")
 
@@ -21,6 +18,8 @@ f.tillid <- pivot_wider(
   data = f.tillid1,
   names_from = INDIKATOR,
   values_from = value)
+
+colnames(f.tillid)[2:14] <- c("FTI", "Spg1", "Spg2", "Spg3", "Spg4", "Spg8", "Spg5", "Spg6", "Spg7", "Spg9", "Spg10", "Spg11", "Spg12")
 
 #vi henter data fra Danmarks statistik
 p.forbrugss <- dst_meta(table = "NKN1", lang = "da")
@@ -83,13 +82,11 @@ for(i in 1:length(forbrugertillid)-1) {
     x = as.numeric(forbrugertillid[i, ]),
     m = 1,
     simplify = TRUE
+    
   )
-  means <- lapply(df2, function(idx) {
-    colMeans(forbrugertillid[idx, , drop = FALSE])
-  })
+  
+  Comblist[i]=list(df2)
 }
-
-####################
 
 ### Kontrol af Cor i listen ### BRUGES IKKE
 førsteplads <- (forbrugertillid$F2.Familiens.økonomiske.situation.i.dag..sammenlignet.med.for.et.år.siden+
