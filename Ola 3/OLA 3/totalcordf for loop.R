@@ -20,3 +20,16 @@ for (i in 2:11) {
 }
 
 totalcordf <- cbind(cordf2, cordf3, cordf4, cordf5, cordf6, cordf7, cordf8, cordf9, cordf10, cordf11)
+
+testdf = as.data.frame(matrix(data=NA,  nrow = 1, ncol = ncol(totalcordf)))
+
+for (i in 1:ncol(totalcordf)){
+ lm.spgcomb <- lm(f.tillidsammen$pfv ~ totalcordf[,i])
+ 
+ R2 <- summary(lm.spgcomb)$r.squared
+ testdf[,i] <- R2
+}
+
+colnames(testdf) <- colnames(totalcordf)
+
+rsquareddf <- t(testdf)

@@ -169,3 +169,4 @@ validationplot(pcr.fit, val.type = "MSEP")
 
 w.indicators1 <- loadings.pcr.fit[1:11, 2]^2
 sum(w.indicators1)
+
