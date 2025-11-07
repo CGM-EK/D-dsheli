@@ -1,0 +1,21 @@
+library(ggplot2)
+
+FTI_og_PFV <- cbind(f.tillidsammen, forbrugertillid)
+
+ggplot(data=FTI_og_PFV, aes(x=year))+
+  geom_bar(aes(y=pfv), fill = "green", stat = "identity")+
+  geom_line(aes(y=Spg10+sqrt(Spg10[1]^2)), colour="blue", size=1.2)+
+  theme(axis.text.x = element_text(size = 15,angle = 90, vjust = 0.5, hjust = 1))+
+  scale_x_date(name = "Årstal", breaks = f.tillidsammen$year[seq(1, length(f.tillidsammen$year), by = 4)],
+               labels = format(f.tillidsammen$year[seq(1, length(f.tillidsammen$year), by = 4)], "%Y"))+
+  theme_minimal()+
+  labs(title = "Spg 3 ")
+
+cor(FTI_og_PFV$pfv, FTI_og_PFV$Spg9) 
+
+
+
+
+?plot
+
+sqrt(2)
