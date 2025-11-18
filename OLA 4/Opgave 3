@@ -1,0 +1,112 @@
+#3.1 Barplot lande/fly
+statedfpr$V3 <- gsub("Kingdom of the Netherlands", "Netherlands", statedfpr$V3)
+
+ggplot(data=statedfpr,aes(x=V3,fill=V3))+
+  geom_bar()+
+  labs(
+    title="Overvægt af britiske fly over Nordsøen",
+    x="Lande",
+    y="Antal fly",
+    caption=paste0(baseurl,endpointS)
+  )+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  scale_y_continuous(breaks=seq(0,100,by=5))
+
+#3.2 Fly tracks
+
+#Fly 1 - Lige flyving
+
+icaoF <- "402ab3"
+begin <- 1763474494
+end <- 1763474495
+
+flyurl <- paste0(
+  "https://opensky-network.org/api/tracks/all?",
+  "icao24=", icaoF,
+  "&begin=", begin,
+  "&end=", end
+)
+
+resfly <- GET(flyurl, add_headers(Authorization = paste("Bearer", token)))
+rescontentfly <- content(resfly, as = "text")
+resretvalfly <- fromJSON(rescontentfly)
+
+icaol <- as.data.frame(resretvalfly)
+
+plot(data=icaol,x=icaol$path.2,y=icaol$path.3)
+
+#fly 2 - cirkel flyning
+
+plot(x=circjet2$lat[150:295],y=circjet2$lng[150:295])
+
+
+
+#3.3 loops and shit
+
+alle_fly <- list()
+
+for (i in seq_along(icaoliste)) {
+  tryCatch({
+    icaoting <- paste0(
+      "https://opensky-network.org/api/tracks/all?",
+      "icao24=", icaoliste[i],
+      "&begin=", statedfpr[i, 4],
+      "&end=", statedfpr[i, 5]
+    )
+
+    resfly3 <- GET(icaoting, add_headers(Authorization = paste("Bearer", token)))
+    rescontentfly3 <- content(resfly3, as = "text")
+    resretvalfly3 <- fromJSON(rescontentfly3)
+    bingbang <- as.data.frame(resretvalfly3)
+    bingbang$icao_id <- icaoliste[i]
+    alle_fly[[length(alle_fly) + 1]] <- bingbang
+
+  }, error = function(e) {
+    message("Fejl ved iteration ", i, ": ", e$message)
+  })
+}
+
+samlet_flydata <- do.call(rbind, alle_fly)
+
+#3.3 LM test and loopz idk
+
+r2values<-list()
+
+for(i in 1:length(alle_fly)){
+  lm_temp<-lm(alle_fly[[i]][["path.2"]]~alle_fly[[i]][["path.3"]])
+  r2values[i]<-summary(lm_temp)$r.squared
+
+
+
+
+"""""""""""""""""""""""""""""""""""""""
+Data til opgave:
+
+baseurl <- "https://opensky-network.org/api"
+
+#
+endpointS <- "/states/all"
+endpointT <- "/tracks/all"
+
+#
+queryS <- paste0(baseurl,endpointS)
+queryT <- paste0(baseurl,endpointT)
+
+
+#### NORTH SEA ####
+lamin=52.055129
+lamax=56.196869
+lomin=-6.065140
+lomax=4.305954
+
+fullurl=paste0("https://opensky-network.org/api/states/all?lamin=",lamin,"&lomin=",lomin,"&lamax=",lamax,"&lomax=",lomax)
+fullurl=paste0(baseurl,endpointS,"?lamin=",lamin,"&lomin=",lomin,"&lamax=",lamax,"&lomax=",lomax)
+
+# one take over NS (skateboard)
+token=getToken()
+res <- httr::GET(fullurl,add_headers(Authorization = paste("Bearer", token)))
+rescontent <- httr::content(res, as="text")
+resretval <- jsonlite::fromJSON(rescontent)
+statedfpr <- as.data.frame(resretval$states)
+}
