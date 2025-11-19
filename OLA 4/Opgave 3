@@ -76,7 +76,59 @@ r2values<-list()
 for(i in 1:length(alle_fly)){
   lm_temp<-lm(alle_fly[[i]][["path.2"]]~alle_fly[[i]][["path.3"]])
   r2values[i]<-summary(lm_temp)$r.squared
+}
 
+#3.4 alogrimte for cirkel fly
+#note til næste gang:
+#R2 værdi under 0,2= antagelse af cirkelene fly, skal testes (Landing og takeoff evt fjernes bagfra/forfra)
+
+lmhubba<-lm(circjet2$lat[150:295]~circjet2$lng[150:295])
+summary(lmhubba)
+
+r2flydf<-as.data.frame(r2values)
+f2flydf<-data.frame(t(r2flydf))
+jonez<-c(1:122)
+row.names(f2flydf)<-jonez
+
+#test spotting
+fly1<-as.data.frame(alle_fly[[8]])
+plot(x=`15`$path.2,y=`15`$path.3)
+
+#################################
+samlet_flydata$latlong=paste0(samlet_flydata$path.2,"_",samlet_flydata$path.3,"_",samlet_flydata$icao24)
+duplicates <- samlet_flydata[duplicated(samlet_flydata$latlong), ]
+
+plot(x=samlet_flydata$path.2[],y=samlet_flydata$path.3)
+
+############################### noice
+threshold <- 300
+window <- 20
+resultater<-list()
+counter<-1
+counterstrike<-1
+
+x <- samlet_flydata$path.5
+
+for (i in 1:(length(x)-window)) {
+  counterstrike<-counterstrike+1
+  if (any(abs(x[i] - x[(i+1):(i+window)]) > threshold)) {
+    resultater[[counter]]<-list(
+      samlet_flydata$icao24[counterstrike]
+    )
+    counter<-counter+1
+  }
+}
+
+cirkelmus<-as.data.frame(resultater)
+transcirkelmus<-as.data.frame(t(cirkelmus))
+uniktranscirkelmus<-unique(transcirkelmus$V1)
+
+færdigcirkelmus$algoryyytm<-færdigcirkelmus$ICAO....unique.samlet_flydata.icao24.%in% uniktranscirkelmus
+#################
+færdigcirkelmus<-data.frame(
+  ICAO<-unique(samlet_flydata$icao24),
+  R2<-f2flydf$t.r2flydf.
+)
 
 
 
