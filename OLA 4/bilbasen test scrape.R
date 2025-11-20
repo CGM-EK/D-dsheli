@@ -137,8 +137,39 @@ colname <- c("Modelår","1. registrering","Kilometertal","Drivmiddel",
 colnames(spec_df_wide) <- colname
 
 #Cbinder salgsdetaljer til dataframen med informationer om bilen 
-speccleanfinal <- cbind(spec_df_wide, adresse, cvr, forhandler, links, prices, makemodels, beskrivelse)
+speccleanfinal <- cbind(spec_df_wide, adresse, cvr, forhandler, links, prices, makemodels, beskrivelse, prices)
 
+spfcolnames <- c("modelår","f_reg","km_tal","Drivmiddel",
+                            "bs_forbrug",
+                            "CO2",
+                            "euronorm",
+                            "periodisk_afg",
+                            "ydelse",
+                            "acceleration",
+                            "tophastighed",
+                            "geartype",
+                            "antal_gear",
+                            "trækvægt",
+                            "farve",
+                            "nypris",
+                            "kategori",
+                            "type",
+                            "bag_str",
+                            "vægt",
+                            "bredde",
+                            "længde",
+                            "højde",
+                            "lastevne",
+                            "max_træk_m_b",
+                            "trækhjul",
+                            "cylindre",
+                            "abs_brems",
+                            "esp",
+                            "airbags",
+                            "tank_kap",
+                            "døre",
+                            "beskrivelse") 
+colnames(speccleanfinal) <- spfcolnames
 #Renser data ved at fjerne de få biler som havde et producent år.
 speccleanfinal <- speccleanfinal[!grepl("/", speccleanfinal$Kilometertal), ]
 #Fjerner tom kolonne
@@ -161,5 +192,4 @@ andennyebil <- c("2012", "-", "200.000 km", "Børneben", "Afhængigt af barn", "
                                                                 "Trækhjul", "0", "Ja", "Nej", "1", "2 børneben", "2", "Prins Jørgens Gård 5, 1218 København", "87654321", "Jørgen", "Børnevogn.dk", "450 kr.", "Børnevogn04", "Perfekt, køb og køb den")
 #tilføjer de nye biler til dataframe
 speccleanfinal1.3 <- rbind(speccleanfinalminus5, førstenyebile, andennyebil)
-
 
