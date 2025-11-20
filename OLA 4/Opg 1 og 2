@@ -1,7 +1,12 @@
+
 library(rvest)
 library(httr)
 library(tidyverse)
 library(tibble)
+library(DBI)
+library(RMariaDB)
+
+
 
 #tomme lister
 makemodels   <- c()
@@ -28,13 +33,13 @@ cars <- page %>% html_nodes("article.Listing_listing__XwaYe")
 for(page_num in 1:5)
   #if statement som tager url for side 1 hvis page_num er lig 1 og ellers ændres page_num i URL.
   #Gøres da side 1 URL ikke kan have "Page=1"
-  {
+{
   if(page_num == 1) {url <- "https://www.bilbasen.dk/brugt/autocamper?fuel=1&fuel=2&includeengroscvr=true&includeleasing=false&sellertypes=dealer"
   } else 
-    {
-  url <- paste0("https://www.bilbasen.dk/brugt/autocamper?fuel=1&fuel=2&includeengroscvr=true&includeleasing=false&page=", page_num, "&sellertypes=dealer")
+  {
+    url <- paste0("https://www.bilbasen.dk/brugt/autocamper?fuel=1&fuel=2&includeengroscvr=true&includeleasing=false&page=", page_num, "&sellertypes=dealer")
   }
- res <- GET(url, add_headers("User-Agent"="Mozilla/5.0"))
+  res <- GET(url, add_headers("User-Agent"="Mozilla/5.0"))
   page <- read_html(res)
   
   #Siden over salgsopslag
@@ -137,43 +142,51 @@ colname <- c("Modelår","1. registrering","Kilometertal","Drivmiddel",
 colnames(spec_df_wide) <- colname
 
 #Cbinder salgsdetaljer til dataframen med informationer om bilen 
-speccleanfinal <- cbind(spec_df_wide, adresse, cvr, forhandler, links, prices, makemodels, beskrivelse, prices)
+speccleanfinal <- cbind(spec_df_wide, adresse, cvr, forhandler, links, prices, makemodels, beskrivelse)
 
 spfcolnames <- c("modelår","f_reg","km_tal","Drivmiddel",
-                            "bs_forbrug",
-                            "CO2",
-                            "euronorm",
-                            "periodisk_afg",
-                            "ydelse",
-                            "acceleration",
-                            "tophastighed",
-                            "geartype",
-                            "antal_gear",
-                            "trækvægt",
-                            "farve",
-                            "nypris",
-                            "kategori",
-                            "type",
-                            "bag_str",
-                            "vægt",
-                            "bredde",
-                            "længde",
-                            "højde",
-                            "lastevne",
-                            "max_træk_m_b",
-                            "trækhjul",
-                            "cylindre",
-                            "abs_brems",
-                            "esp",
-                            "airbags",
-                            "tank_kap",
-                            "døre",
-                            "beskrivelse") 
+                 "bs_forbrug",
+                 "CO2",
+                 "euronorm",
+                 "periodisk_afg",
+                 "ydelse",
+                 "acceleration",
+                 "tophastighed",
+                 "geartype",
+                 "antal_gear",
+                 "trækvægt",
+                 "farve",
+                 "nypris",
+                 "kategori",
+                 "type",
+                 "bag_str",
+                 "vægt",
+                 "bredde",
+                 "længde",
+                 "højde",
+                 "lastevne",
+                 "max_træk_m_b",
+                 "trækhjul",
+                 "cylindre",
+                 "abs_brems",
+                 "esp",
+                 "airbags",
+                 "tank_kap",
+                 "døre",
+                 "adresse",
+                 "cvr",
+                 "forhandler",
+                 "links",
+                 "prices",
+                 "makemodels",
+                 "beskrivelse"
+                 ) 
+speccleanfinal <- speccleanfinal[,-(33)]
 colnames(speccleanfinal) <- spfcolnames
 #Renser data ved at fjerne de få biler som havde et producent år.
-speccleanfinal <- speccleanfinal[!grepl("/", speccleanfinal$Kilometertal), ]
+speccleanfinal <- speccleanfinal[!grepl("/", speccleanfinal$km_tal), ]
 #Fjerner tom kolonne
-speccleanfinal <- speccleanfinal[,-(33)]
+
 speccleanfinal <- speccleanfinal[-(95),]
 
 ########### 1.3
@@ -187,9 +200,26 @@ speccleanfinalminus5[1:3,37] <- c("1.750.000 kr.", "625.000 kr.", "3.200.000 kr.
 
 #laver 2 nye "biler"
 førstenyebile <-  c("1832", "-", "150.000 km", "Viljestyrke", "15,6 km/gulerod", "6 g/km", "1", "8.220 kr. / år",   "2 hk/-", "-", "25 km/t", "Manuel", "3", "2766 kg", "Hest brun - vogn guld", "4 rismark", "Heste Campingbus", "Karet", "-", "800 kg", "2 heste", "3 heste","1,5 heste", "Umenneskelige mængder i kg", "-",      
-"Forhesttræk", "0", "Ja", "Nej", "4", "300 gulerødder", "2", "Prins Jørgens Gård 5, 1218 København", "12345678", "Jørgen", "hestenet.dk", "1.000 kr", "Ford hestevogn v6 Turbo", "Sej hestevogn kom og køb den")
+                    "Forhesttræk", "0", "Ja", "Nej", "4", "300 gulerødder", "2", "Prins Jørgens Gård 5, 1218 København", "12345678", "Jørgen", "hestenet.dk", "1.000 kr", "Ford hestevogn v6 Turbo", "Sej hestevogn kom og køb den")
 andennyebil <- c("2012", "-", "200.000 km", "Børneben", "Afhængigt af barn", "2 g/km", "1", "220 kr. / år",   "1 bk/-", "-", "50 km/t", "Manuel", "3", "100 kg", "Gul og rød", "899,99 kr.", "Legetøjsbil", "Løbebil", "-", "22 kg", "60 cm", "100 cm", "80 cm", "Umenneskelige mængder i kg", "-",      
-                                                                "Trækhjul", "0", "Ja", "Nej", "1", "2 børneben", "2", "Prins Jørgens Gård 5, 1218 København", "87654321", "Jørgen", "Børnevogn.dk", "450 kr.", "Børnevogn04", "Perfekt, køb og køb den")
+                 "Trækhjul", "0", "Ja", "Nej", "1", "2 børneben", "2", "Prins Jørgens Gård 5, 1218 København", "87654321", "Jørgen", "Børnevogn.dk", "450 kr.", "Børnevogn04", "Perfekt, køb og køb den")
 #tilføjer de nye biler til dataframe
 speccleanfinal1.3 <- rbind(speccleanfinalminus5, førstenyebile, andennyebil)
+con <- dbConnect(MariaDB(),
+                 host="localhost",
+                 db="opg3",
+                 user="root",
+                 password=Sys.getenv("localpw"))
 
+dbWriteTable(con,"autocamper",speccleanfinal1.3, overwrite=T)
+dbWriteTable(con,"autocamper1",speccleanfinalminus5, overwrite=T)               
+
+###########3
+nye_biler_og_ændrede_priser <- speccleanfinal1.3 %>%
+  anti_join(speccleanfinal, by = c("makemodels", "prices"))
+
+solgte_biler <- speccleanfinal %>%
+  anti_join(speccleanfinal1.3, by = "makemodels")
+
+fælles <- speccleanfinal1.3 %>%
+  join(speccleanfinal, by = "makemodels", suffix = c("_new", "_old"))
