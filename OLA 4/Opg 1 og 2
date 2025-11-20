@@ -203,8 +203,12 @@ førstenyebile <-  c("1832", "-", "150.000 km", "Viljestyrke", "15,6 km/gulerod"
                     "Forhesttræk", "0", "Ja", "Nej", "4", "300 gulerødder", "2", "Prins Jørgens Gård 5, 1218 København", "12345678", "Jørgen", "hestenet.dk", "1.000 kr", "Ford hestevogn v6 Turbo", "Sej hestevogn kom og køb den")
 andennyebil <- c("2012", "-", "200.000 km", "Børneben", "Afhængigt af barn", "2 g/km", "1", "220 kr. / år",   "1 bk/-", "-", "50 km/t", "Manuel", "3", "100 kg", "Gul og rød", "899,99 kr.", "Legetøjsbil", "Løbebil", "-", "22 kg", "60 cm", "100 cm", "80 cm", "Umenneskelige mængder i kg", "-",      
                  "Trækhjul", "0", "Ja", "Nej", "1", "2 børneben", "2", "Prins Jørgens Gård 5, 1218 København", "87654321", "Jørgen", "Børnevogn.dk", "450 kr.", "Børnevogn04", "Perfekt, køb og køb den")
+
 #tilføjer de nye biler til dataframe
 speccleanfinal1.3 <- rbind(speccleanfinalminus5, førstenyebile, andennyebil)
+
+
+###########OPG 3######################################
 con <- dbConnect(MariaDB(),
                  host="localhost",
                  db="opg3",
@@ -214,7 +218,6 @@ con <- dbConnect(MariaDB(),
 dbWriteTable(con,"autocamper",speccleanfinal1.3, overwrite=T)
 dbWriteTable(con,"autocamper1",speccleanfinalminus5, overwrite=T)               
 
-###########3
 nye_biler_og_ændrede_priser <- speccleanfinal1.3 %>%
   anti_join(speccleanfinal, by = c("makemodels", "prices"))
 
@@ -223,3 +226,4 @@ solgte_biler <- speccleanfinal %>%
 
 fælles <- speccleanfinal1.3 %>%
   join(speccleanfinal, by = "makemodels", suffix = c("_new", "_old"))
+
