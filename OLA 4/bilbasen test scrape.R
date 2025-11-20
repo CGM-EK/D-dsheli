@@ -143,6 +143,7 @@ speccleanfinal <- cbind(spec_df_wide, adresse, cvr, forhandler, links, prices, m
 speccleanfinal <- speccleanfinal[!grepl("/", speccleanfinal$Kilometertal), ]
 #Fjerner tom kolonne
 speccleanfinal <- speccleanfinal[,-(33)]
+speccleanfinal <- speccleanfinal[-(95),]
 
 ########### 1.3
 #scrapedate for nye biler ##------ Tue Nov 19 10:22:16 2025 ------##
@@ -160,4 +161,5 @@ andennyebil <- c("2012", "-", "200.000 km", "Børneben", "Afhængigt af barn", "
                                                                 "Trækhjul", "0", "Ja", "Nej", "1", "2 børneben", "2", "Prins Jørgens Gård 5, 1218 København", "87654321", "Jørgen", "Børnevogn.dk", "450 kr.", "Børnevogn04", "Perfekt, køb og køb den")
 #tilføjer de nye biler til dataframe
 speccleanfinal1.3 <- rbind(speccleanfinalminus5, førstenyebile, andennyebil)
+
 
