@@ -1,11 +1,10 @@
-
+#pakker til brug i opgaven
 library(rvest)
 library(httr)
 library(tidyverse)
 library(tibble)
 library(DBI)
 library(RMariaDB)
-
 
 
 #tomme lister
@@ -16,9 +15,8 @@ adresse      <- c()
 cvr          <- c()
 links        <- c()
 beskrivelse  <- c()
-
 specifikationer <- list()
-#indeks for at gemme Knud
+#counter til at gemme knud/specifikationer
 counter <- 1
 
 #skal nok slettes
@@ -90,7 +88,7 @@ for(page_num in 1:5)
   }
 }
 
-#Konvertere de enkelte bilers information til en "dropdown" i listen ved brug af tibblepakken og alle detaljer får sin egen linje.
+#Konverterer de enkelte bilers information til et dropdown" i listen ved brug af tibblepakken
 specifikationer <- lapply(specifikationer, function(x) {
   tibble(specifikation = x)
 })
@@ -104,7 +102,7 @@ spec_padded <- lapply(spec_vectors, function(x) {
   c(x, rep(NA, max_len - length(x)))
 })
 
-# Laver til en dataframe
+# Laver til et dataframe
 spec_df_wide <- as.data.frame(do.call(rbind, spec_padded))
 
 #Opretter kolonnenavne
@@ -144,6 +142,7 @@ colnames(spec_df_wide) <- colname
 #Cbinder salgsdetaljer til dataframen med informationer om bilen 
 speccleanfinal <- cbind(spec_df_wide, adresse, cvr, forhandler, links, prices, makemodels, beskrivelse)
 
+#colnames til den nye
 spfcolnames <- c("modelår","f_reg","km_tal","Drivmiddel",
                  "bs_forbrug",
                  "CO2",
@@ -181,12 +180,14 @@ spfcolnames <- c("modelår","f_reg","km_tal","Drivmiddel",
                  "makemodels",
                  "beskrivelse"
                  ) 
+#fjerner en tom kolonne
 speccleanfinal <- speccleanfinal[,-(33)]
+#indsætter navnene for kolonnerne
 colnames(speccleanfinal) <- spfcolnames
-#Renser data ved at fjerne de få biler som havde et producent år.
+#Renser data ved at fjerne de få biler som havde et producent år, da det ødelægger deres observationer ift de andre
 speccleanfinal <- speccleanfinal[!grepl("/", speccleanfinal$km_tal), ]
-#Fjerner tom kolonne
 
+#Fjerner tom række
 speccleanfinal <- speccleanfinal[-(95),]
 
 ########### 1.3
@@ -203,25 +204,37 @@ førstenyebile <-  c("1832", "-", "150.000 km", "Viljestyrke", "15,6 km/gulerod"
                     "Forhesttræk", "0", "Ja", "Nej", "4", "300 gulerødder", "2", "Prins Jørgens Gård 5, 1218 København", "12345678", "Jørgen", "hestenet.dk", "1.000 kr", "Ford hestevogn v6 Turbo", "Sej hestevogn kom og køb den")
 andennyebil <- c("2012", "-", "200.000 km", "Børneben", "Afhængigt af barn", "2 g/km", "1", "220 kr. / år",   "1 bk/-", "-", "50 km/t", "Manuel", "3", "100 kg", "Gul og rød", "899,99 kr.", "Legetøjsbil", "Løbebil", "-", "22 kg", "60 cm", "100 cm", "80 cm", "Umenneskelige mængder i kg", "-",      
                  "Trækhjul", "0", "Ja", "Nej", "1", "2 børneben", "2", "Prins Jørgens Gård 5, 1218 København", "87654321", "Jørgen", "Børnevogn.dk", "450 kr.", "Børnevogn04", "Perfekt, køb og køb den")
+#nye kolonner
+solgte_biler <- speccleanfinal %>%
+  anti_join(speccleanfinal1.3, by = "links")
+solgt_total <- c(solgt_total, solgte_biler)
+
+ændrede_priser <- speccleanfinal1.3 %>%
+  anti_join(speccleanfinal, by = c("makemodels", "prices")) %>% 
+  anti_join(nye_biler, by = "links")
+
+nye_biler <- speccleanfinal1.3 %>%
+  anti_join(speccleanfinal, by = "links")
+
 
 #tilføjer de nye biler til dataframe
 speccleanfinal1.3 <- rbind(speccleanfinalminus5, førstenyebile, andennyebil)
 
+#TRUE or FALSE på nye "sold" kolonne
+solgte_biler$sold <- rep("TRUE", times = nrow(solgte_biler))
+speccleanfinal1.3$sold <- rep("FALSE", times = nrow(speccleanfinal1.3))
 
-###########OPG 3######################################
+#df med alle biler inkl. biler som er solgt
+bilfinal <- rbind(speccleanfinal1.3,solgte_biler)
+
+##################
+#connecter til workbenchen
 con <- dbConnect(MariaDB(),
                  host="localhost",
                  db="opg3",
                  user="root",
                  password=Sys.getenv("localpw"))
-
+###########
+#indsætter den gamle og den opdaterede dataframe i workbench
 dbWriteTable(con,"autocamper",speccleanfinal1.3, overwrite=T)
-dbWriteTable(con,"autocamper1",speccleanfinalminus5, overwrite=T)               
-
-nye_biler_og_ændrede_priser <- speccleanfinal1.3 %>%
-  anti_join(speccleanfinal, by = c("makemodels", "prices"))
-
-solgte_biler <- speccleanfinal %>%
-  anti_join(speccleanfinal1.3, by = "makemodels")
-
-
+dbWriteTable(con,"autocamper1",speccleanfinalminus5, overwrite=T)
