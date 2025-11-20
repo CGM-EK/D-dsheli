@@ -224,6 +224,4 @@ nye_biler_og_ændrede_priser <- speccleanfinal1.3 %>%
 solgte_biler <- speccleanfinal %>%
   anti_join(speccleanfinal1.3, by = "makemodels")
 
-fælles <- speccleanfinal1.3 %>%
-  join(speccleanfinal, by = "makemodels", suffix = c("_new", "_old"))
 
