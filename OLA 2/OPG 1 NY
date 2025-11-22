@@ -101,6 +101,14 @@ ggplot(data = combinedsalg, aes(x=Bykategori, y=antal, fill = Bykategori))+
 
 mapDK(values="kvmpris", id="mzip", data=mergedcleanvilla, detail = "zip", show_missing = T)
 
+dzzz <- mergedcleanvilla %>% 
+  group_by(by) %>% 
+  summarise(`indbyggertal i postnummeret` = as.integer(mean(total)))
+
+dzzz2 <- mergedcleanvilla %>% count(by)
+
+byer_og_til_salg <- cbind(dzzz, `antal huse til salg`=dzzz2$n)
+
 #############################
 co <- boligcl22 %>% 
   group_by(type) %>% 
